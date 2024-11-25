@@ -108,9 +108,10 @@ int check_cache_data_hit(void *addr, char type) {
                 return (cache ->data[byte_offset+3]<< 24) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset]) ; 
             }
         }
-        num_cache_misses++; 
-        return -1; 
+        
     }
+    num_cache_misses++; 
+        return -1; 
     
 }
 // This function is to find the entry index in set for copying to cache
