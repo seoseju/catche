@@ -85,7 +85,8 @@ int check_cache_data_hit(void *addr, char type) {
     int blockAddr = (*(int *)addr) / 8; 
     int cache_index = blockAddr % CACHE_SET_SIZE ; 
     int tag= blockAddr / CACHE_SET_SIZE; 
-
+    int byte_offset = (*(int *)addr) % 8; 
+    int word_index = blockAddr * 8 / CACHE_SET_SIZE; 
 
     for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
         cache_entry_t *cache = &cache_array[cache_index][i]; 
@@ -94,7 +95,18 @@ int check_cache_data_hit(void *addr, char type) {
             cache->timestamp ++;
             global_timestamp ++; 
             num_cache_hits ++;  
-            return cache->data;
+            //return cache->data[0];
+
+            if(type=='b'){
+                return cache->data[byte_offset]; 
+            }
+            else if(type == 'h'){
+
+                return cache ->data[byte_offset]| (cache ->data[byte_offset +1] <<8); 
+            }
+            else if(type == 'w'){
+                return (cache ->data[byte_offset+3]<< 24) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset]) ; 
+            }
         }
         num_cache_misses++; 
         return -1; 
