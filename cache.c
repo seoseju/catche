@@ -82,15 +82,24 @@ void print_cache_entries() {
 int check_cache_data_hit(void *addr, char type) {
 
     /* Fill out here */
+    int blockAddr = (*(int *)addr) / 8; 
+    int cache_index = blockAddr % CACHE_SET_SIZE ; 
+    int tag= blockAddr / CACHE_SET_SIZE; 
 
 
+    for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
+        cache_entry_t *cache = &cache_array[cache_index][i]; 
 
-
-
-
-
-    /* Return the data */
-    return 0;    
+        if(cache->valid == 1 && cache->tag == tag){
+            cache->timestamp ++;
+            global_timestamp ++; 
+            num_cache_hits ++;  
+            return cache->data;
+        }
+        num_cache_misses++; 
+        return -1; 
+    }
+    
 }
 // This function is to find the entry index in set for copying to cache
 int find_entry_index_in_set(int cache_index) {
