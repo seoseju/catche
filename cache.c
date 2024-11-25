@@ -92,22 +92,41 @@ int check_cache_data_hit(void *addr, char type) {
     /* Return the data */
     return 0;    
 }
-
+// This function is to find the entry index in set for copying to cache
 int find_entry_index_in_set(int cache_index) {
     int entry_index;
-
+    
+    // set 어쩌고에서는 cache_index=집합 번호
     /* Check if there exists any empty cache space by checking 'valid' */
+    for(int i=0;i<DEFAULT_CACHE_ASSOC;i++)
+        if(cache_array[cache_index][i].valid==0)
+            return entry_index = i;
 
+    /* If the set has only 1 entry, return index 0 */
+    /* Otherwise, search over all entries
+    to find the least recently used entry by checking 'timestamp' */
+    if(CACHE_SET_SIZE == 1) entry_index = 0;
+    else{
+        int min_timestamp = cache_array[cache_index][0].timestamp;
+        for(int i=1;i<DEFAULT_CACHE_ASSOC;i++) {
+            if(min_timestamp > cache_array[cache_index][0].timestamp){
+                min_timestamp = cache_array[cache_index][0].timestamp;
+                entry_index = i;
+            }
+        }
+    }
 
-    /* Otherwise, search over all entries to find the least recently used entry by checking 'timestamp' */
-
-
-
+    /* return the cache index for copying from memory*/
     return entry_index; 
 }
 
 int access_memory(void *addr, char type) {
     
+    /* get the entry index by invoking find_entry_index_in_set()
+        for copying to the cache */
+
+    /* add this main memory access cycle to global access cycle */
+
     /* Fetch the data from the main memory and copy them to the cache */
     /* void *addr: addr is byte address, whereas your main memory address is word address due to 'int memory_array[]' */
 
@@ -116,11 +135,7 @@ int access_memory(void *addr, char type) {
 
 
 
-    /* Return the accessed data with a suitable type */    
-
-
-
-
-
+    /* Return the accessed data with a suitable type (b, h, or w) */    
+    // return -1 for unknown type
     return 0;
 }
