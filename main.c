@@ -10,6 +10,7 @@
  */
 
 #include <stdio.h>
+#include <string.h> // 내가 했어..
 #include "cache_impl.h"
 
 int num_cache_hits = 0;
@@ -23,15 +24,25 @@ int global_timestamp = 0;
 int retrieve_data(void *addr, char data_type) {
     int value_returned = -1; /* accessed data */
 
-    /* Invoke check_cache_data_hit() */
+    /*check data by invoking check_cache_data_hit()*/
+    value_returned = check_cache_data_hit(addr, data_type); 
 
+    /* In case of the cache miss event, retrieve data from the main memory  by invoking access_memory()*/
+    if(value_returned == -1){
 
-    
-    /* In case of the cache miss event, access the main memory by invoking access_memory() */
+        value_returned = access_memory(addr, data_type); 
 
-
-
-    return value_returned;    
+        /* If there is no data neither in cache nor memory, return -1, 
+        else return data */
+        if(value_returned == -1){
+            return -1; 
+        }
+        /* access_memory 성공 !! */
+        else return value_returned; 
+    }
+    /* hit 성공 !! */
+    else return value_returned; 
+  
 }
 
 int main(void) {
@@ -43,12 +54,12 @@ int main(void) {
     init_memory_content();
     init_cache_content();
     
-    ifp = fopen("access_input.txt", "r");
+    ifp = fopen("access_input.txt", "r"); //ifp = 인풋파일을 '읽기모드'로 열었음 
     if (ifp == NULL) {
         printf("Can't open input file\n");
         return -1;
     }
-    ofp = fopen("access_output.txt", "w");
+    ofp = fopen("access_output.txt", "w"); //ofp = 아웃풋파일을 쓰기 모드로 열었음 
     if (ofp == NULL) {
         printf("Can't open output file\n");
         fclose(ifp);
@@ -57,6 +68,59 @@ int main(void) {
     
     /* Fill out here by invoking retrieve_data() */
 
+    //인풋 파일에서 행 수 읽기 .. 하... 그냥 "많아봤자 10행이겠지" 생각해서 max_lines = 10으로 했음..
+
+    // 인풋파일 뜯어서 이차원배열에 저장 
+    // array[0][1] : 첫번째 줄의 두번째 단어 == b 
+
+    char array[10][10];     //[max_lines][max_word_length]: [최대 줄 수][단어의 최대 길이]
+    char line[20];          // 한 줄을 저장할 배열 
+    int lineCount =0 ;      //읽은 줄 수 
+
+    while(fgets(line, sizeof(line), ifp) && lineCount < 10){
+    
+        line[strcspn(line, "\n")] = '\0';  // 줄 끝의 \n제거
+
+        char *word = strtok(line, " "); //첫번째 단어 
+        int wordIndex = 0; 
+        while(word != NULL && wordIndex < 2){
+            strncpy(array[lineCount][wordIndex], word, 9); 
+            array[lineCount][wordIndex] = '\0'; 
+            word = strtok(NULL, " "); 
+            wordIndex ++; 
+            
+        }
+        lineCount ++; 
+    }
+
+    // array[i][1] 로 type읽어서 access_type 정하고 array[i][0]으로 access_addr 정하기 
+
+    for(int i=0; i<10; i++){
+       
+            if(array[i][1] == NULL)
+                break; 
+            else {
+               if(array[i][1] == 'b'){                      //'b'타입일 때 
+                    array[i][0] = access_addr ;             // access_addr에 byte address 넣고 
+                    access_type = 'b';                      //'b' 타입인거 access_type 에 넣고
+                    accessed_data = retrieve_data(&access_addr, access_type);       //retrieve_data 실행해서 accessed_data에 넣기 
+                    // ofp에 데이터 쓰는 거 해야함 
+
+               }
+               else if(array[i][1] == 'h'){
+                    array[i][0] = access_addr ; 
+                    access_type = 'h'; 
+                    accessed_data = retrieve_data(&access_addr, access_type);
+               }
+                else if(array[i][1] == 'w'){
+                    array[i][0] = access_addr ; 
+                    access_type = 'w'; 
+                    accessed_data = retrieve_data(&access_addr, access_type);
+               } 
+                
+            }
+        
+    }
 
 
 
