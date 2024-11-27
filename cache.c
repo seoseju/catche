@@ -150,6 +150,7 @@ int access_memory(void *addr, char type) {
     int cache_index = blockAddr % CACHE_SET_SIZE;
     int word_index = (*(int *)addr) / WORD_SIZE_BYTE;
     //이거는 memory에서 바로 리턴할 경우...
+    //이름을 word_offset으로 하는 게 맞을지 모르겟네 byte_offset이 맞나?
     int word_offset = (*(int *)addr) % WORD_SIZE_BYTE;
     //int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
 
