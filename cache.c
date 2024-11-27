@@ -89,12 +89,17 @@ int check_cache_data_hit(void *addr, char type) {
     int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
     //int word_index = (*(int *)addr) / CACHE_SET_SIZE; 
 
+    printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",
+                    blockAddr, byte_offset, cache_index, tag);
+
     num_access_cycles++; // 내가추가햇삼
 
     for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
         cache_entry_t *cache = &cache_array[cache_index][i]; 
 
         if(cache->valid == 1 && cache->tag == tag){
+            printf("=> Hit!\n");
+
             cache->timestamp ++;
             global_timestamp ++; 
             num_cache_hits ++;
@@ -113,7 +118,8 @@ int check_cache_data_hit(void *addr, char type) {
         }
         
     }
-    num_cache_misses++; 
+    num_cache_misses++;
+    printf("=> Miss!\n");
     return -1; 
     
 }
@@ -157,6 +163,7 @@ int access_memory(void *addr, char type) {
     /* get the entry index by invoking find_entry_index_in_set()
         for copying to the cache */
     int entry_index = find_entry_index_in_set(cache_index);
+    printf("MEMORY >> word index = %d\n", entry_index);
 
     /* add this main memory access cycle to global access cycle */
     num_access_cycles+=100;

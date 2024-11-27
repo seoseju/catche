@@ -25,6 +25,7 @@ int retrieve_data(void *addr, char data_type) {
     int value_returned = -1; /* accessed data */
 
     /*check data by invoking check_cache_data_hit()*/
+    printf("===== addr %d type %c ======\n", addr, data_type);
     value_returned = check_cache_data_hit(addr, data_type); 
 
     /* In case of the cache miss event, retrieve data from the main memory  by invoking access_memory()*/
@@ -70,9 +71,10 @@ int main(void) {
 
     //인풋 파일에서 행 수 읽기 .. 하... 그냥 "많아봤자 10행이겠지" 생각해서 max_lines = 10으로 했음..
     //ㅋㅋㅋㅋㅋㅋㅋ
+    //NULL로 수정할 수 잇을까
 
-    // 인풋파일 뜯어서 이차원배열에 저장 
-    // array[0][1] : 첫번째 줄의 두번째 단어 == b 
+    // 인풋파일 뜯어서 array 이차원 배열에 저장 
+    // array[0][1] : 첫번째 줄의 두번째 단어 == b
 
     char array[10][10];     //[max_lines][max_word_length]: [최대 줄 수][단어의 최대 길이]
     char line[20];          // 한 줄을 저장할 배열 
@@ -88,8 +90,7 @@ int main(void) {
             strncpy(array[lineCount][wordIndex], word, 9); 
             array[lineCount][wordIndex] = '\0'; 
             word = strtok(NULL, " "); 
-            wordIndex ++; 
-            
+            wordIndex ++;
         }
         lineCount ++; 
     }
@@ -97,34 +98,18 @@ int main(void) {
     // array[i][1] 로 type읽어서 access_type 정하고 array[i][0]으로 access_addr 정하기 
 
     for(int i=0; i<10; i++){
-       
-            if(array[i][1] == NULL)
-                break; 
-            else {
-               if(array[i][1] == 'b'){                      //'b'타입일 때 
-                    array[i][0] = access_addr ;             // access_addr에 byte address 넣고 
-                    access_type = 'b';                      //'b' 타입인거 access_type 에 넣고
-                    accessed_data = retrieve_data(&access_addr, access_type);       //retrieve_data 실행해서 accessed_data에 넣기 
-                    // ofp에 데이터 쓰는 거 해야함 
 
-               }
-               else if(array[i][1] == 'h'){
-                    array[i][0] = access_addr ; 
-                    access_type = 'h'; 
-                    accessed_data = retrieve_data(&access_addr, access_type);
-               }
-                else if(array[i][1] == 'w'){
-                    array[i][0] = access_addr ; 
-                    access_type = 'w'; 
-                    accessed_data = retrieve_data(&access_addr, access_type);
-               } 
-                
-            }
-        
+        if(array[i][1] == NULL)
+            break; 
+        else {
+            access_addr = array[i][0];
+            access_type = array[i][1];
+            accessed_data = retrieve_data(&access_addr, access_type);
+            
+            //output파일에 저장
+            fputs(accessed_data, ofp);
+        }
     }
-
-
-
 
     fclose(ifp);
     fclose(ofp);
