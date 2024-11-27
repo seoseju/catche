@@ -150,8 +150,8 @@ int access_memory(void *addr, char type) {
     int cache_index = blockAddr % CACHE_SET_SIZE;
     int word_index = (*(int *)addr) / WORD_SIZE_BYTE;
     //이거는 memory에서 바로 리턴할 경우...
-    //int word_offset = (*(int *)addr) % WORD_SIZE_BYTE;
-    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
+    int word_offset = (*(int *)addr) % WORD_SIZE_BYTE;
+    //int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
 
     /* get the entry index by invoking find_entry_index_in_set()
         for copying to the cache */
@@ -174,35 +174,14 @@ int access_memory(void *addr, char type) {
     }
 
     /* Return the accessed data with a suitable type (b, h, or w) */
-    //캐시에서 뽑아내는 함수를 하나 만들어도 될 것 같기도 하고...
-    int result;
-    if(type=='b'){
-        return cache_array[cache_index][entry_index].data[byte_offset]; 
+     if(type=='b'){
+        return (memory_array[word_index] >> (word_offset * 8)) & 0xFF; 
     }
     else if(type == 'h'){
-        return cache_array[cache_index][entry_index].data[byte_offset]
-                | (cache_array[cache_index][entry_index].data[byte_offset +1] <<8); 
+        return (memory_array[word_index] >> (word_offset * 8)) & 0xFFFF;
     }
     else if(type == 'w'){
-        return (cache_array[cache_index][entry_index].data[byte_offset+3]<< 24)
-                |(cache_array[cache_index][entry_index].data[byte_offset+2] << 16)
-                |(cache_array[cache_index][entry_index].data[byte_offset+1] << 8)
-                |(cache_array[cache_index][entry_index].data[byte_offset]);
+        return (memory_array[word_index] >> (word_offset * 8)) & 0xFFFFFF;
     } else return -1;
-////////////////
-    //  if(type=='b'){
-    //     return (memory_array[arrayIndex] >> (i * 8)) & 0xFF; 
-    // }
-    // else if(type == 'h'){
-    //     return cache_array[cache_index][entry_index].data[byte_offset]
-    //             | (cache_array[cache_index][entry_index].data[byte_offset +1] <<8); 
-    // }
-    // else if(type == 'w'){
-    //     return (cache_array[cache_index][entry_index].data[byte_offset+3]<< 24)
-    //             |(cache_array[cache_index][entry_index].data[byte_offset+2] << 16)
-    //             |(cache_array[cache_index][entry_index].data[byte_offset+1] << 8)
-    //             |(cache_array[cache_index][entry_index].data[byte_offset]);
-    // } else return -1;
-////////////////
     // return -1 for unknown type
 }
