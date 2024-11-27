@@ -69,6 +69,7 @@ int main(void) {
     /* Fill out here by invoking retrieve_data() */
 
     //인풋 파일에서 행 수 읽기 .. 하... 그냥 "많아봤자 10행이겠지" 생각해서 max_lines = 10으로 했음..
+    //ㅋㅋㅋㅋㅋㅋㅋ
 
     // 인풋파일 뜯어서 이차원배열에 저장 
     // array[0][1] : 첫번째 줄의 두번째 단어 == b 

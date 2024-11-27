@@ -82,11 +82,14 @@ void print_cache_entries() {
 int check_cache_data_hit(void *addr, char type) {
 
     /* Fill out here */
-    int blockAddr = (*(int *)addr) / 8; 
-    int cache_index = blockAddr % CACHE_SET_SIZE ; 
+    //여기 constant 변수명으로 수정함
+    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
+    int cache_index = blockAddr % CACHE_SET_SIZE; 
     int tag= blockAddr / CACHE_SET_SIZE; 
-    int byte_offset = (*(int *)addr) % 8; 
-    int word_index = blockAddr * 8 / CACHE_SET_SIZE; 
+    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
+    //int word_index = (*(int *)addr) / CACHE_SET_SIZE; 
+
+    num_access_cycles++; // 내가추가햇삼
 
     for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
         cache_entry_t *cache = &cache_array[cache_index][i]; 
@@ -94,7 +97,7 @@ int check_cache_data_hit(void *addr, char type) {
         if(cache->valid == 1 && cache->tag == tag){
             cache->timestamp ++;
             global_timestamp ++; 
-            num_cache_hits ++;  
+            num_cache_hits ++;
             //return cache->data[0];
 
             if(type=='b'){
@@ -111,7 +114,7 @@ int check_cache_data_hit(void *addr, char type) {
         
     }
     num_cache_misses++; 
-        return -1; 
+    return -1; 
     
 }
 // This function is to find the entry index in set for copying to cache
@@ -143,21 +146,63 @@ int find_entry_index_in_set(int cache_index) {
 }
 
 int access_memory(void *addr, char type) {
-    
+    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
+    int cache_index = blockAddr % CACHE_SET_SIZE;
+    int word_index = (*(int *)addr) / WORD_SIZE_BYTE;
+    //이거는 memory에서 바로 리턴할 경우...
+    //int word_offset = (*(int *)addr) % WORD_SIZE_BYTE;
+    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
+
     /* get the entry index by invoking find_entry_index_in_set()
         for copying to the cache */
+    int entry_index = find_entry_index_in_set(cache_index);
 
     /* add this main memory access cycle to global access cycle */
+    num_access_cycles+=100;
 
     /* Fetch the data from the main memory and copy them to the cache */
     /* void *addr: addr is byte address, whereas your main memory address is word address due to 'int memory_array[]' */
+    int i=0;
+    int arrayIndex = word_index;
+    while(i<DEFAULT_CACHE_BLOCK_SIZE_BYTE){
+        for(int j=0;j<WORD_SIZE_BYTE;j++){
+            cache_array[cache_index][entry_index].data[i]
+                = (memory_array[arrayIndex] >> (i * 8)) & 0xFF;
+            i++;
+        }
+        arrayIndex++;
+    }
 
-    /* You need to invoke find_entry_index_in_set() for copying to the cache */
-
-
-
-
-    /* Return the accessed data with a suitable type (b, h, or w) */    
+    /* Return the accessed data with a suitable type (b, h, or w) */
+    //캐시에서 뽑아내는 함수를 하나 만들어도 될 것 같기도 하고...
+    int result;
+    if(type=='b'){
+        return cache_array[cache_index][entry_index].data[byte_offset]; 
+    }
+    else if(type == 'h'){
+        return cache_array[cache_index][entry_index].data[byte_offset]
+                | (cache_array[cache_index][entry_index].data[byte_offset +1] <<8); 
+    }
+    else if(type == 'w'){
+        return (cache_array[cache_index][entry_index].data[byte_offset+3]<< 24)
+                |(cache_array[cache_index][entry_index].data[byte_offset+2] << 16)
+                |(cache_array[cache_index][entry_index].data[byte_offset+1] << 8)
+                |(cache_array[cache_index][entry_index].data[byte_offset]);
+    } else return -1;
+////////////////
+    //  if(type=='b'){
+    //     return (memory_array[arrayIndex] >> (i * 8)) & 0xFF; 
+    // }
+    // else if(type == 'h'){
+    //     return cache_array[cache_index][entry_index].data[byte_offset]
+    //             | (cache_array[cache_index][entry_index].data[byte_offset +1] <<8); 
+    // }
+    // else if(type == 'w'){
+    //     return (cache_array[cache_index][entry_index].data[byte_offset+3]<< 24)
+    //             |(cache_array[cache_index][entry_index].data[byte_offset+2] << 16)
+    //             |(cache_array[cache_index][entry_index].data[byte_offset+1] << 8)
+    //             |(cache_array[cache_index][entry_index].data[byte_offset]);
+    // } else return -1;
+////////////////
     // return -1 for unknown type
-    return 0;
 }
