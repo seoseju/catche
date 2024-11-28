@@ -111,12 +111,15 @@ int main(void) {
             access_addr = (unsigned long)atoi(array[i][0]); // char 형 배열이라서 atoi()함수로 int형전환을 해줌 
             access_type = array[i][1][0]; // [i][1][0] 이 들어가야 단어의 첫번째 char을 반환한대.. array를 이차원으로 했더니, overflow가 발생할까봐 안된다네..?
             accessed_data = retrieve_data(&access_addr, access_type);
+            print_cache_entries();
             //디버깅용 프린트
-            printf("%d", accessed_data);
+            printf("%x\n", accessed_data);
+            if(i==2){
+                fputs((char *)accessed_data, ofp);
+            }
             
             //output파일에 저장
             //fputs()가 char *형을 인풋으로 받는대서... 아예 아웃풋 형식 다 쓴걸 char*에 넣고? fputs를 써야할듯. 
-            //fputs((char *)accessed_data, ofp);
         }
     }
 
