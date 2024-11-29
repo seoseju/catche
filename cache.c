@@ -90,12 +90,15 @@ int check_cache_data_hit(void *addr, char type) {
     //int word_index = (*(int *)addr) / CACHE_SET_SIZE; 
 
     printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",
-                    blockAddr, byte_offset, cache_index, tag);
+                   blockAddr, byte_offset, cache_index, tag);
 
-    num_access_cycles++; // 내가추가햇삼
+    num_access_cycles++; // 내가추가햇삼 >> 고마어 ㅎㅎㅎㅎ
+    num_bytes++;
+
+   
 
     for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
-        cache_entry_t *cache = &cache_array[cache_index][i]; 
+         cache_entry_t *cache = &cache_array[cache_index][i]; 
 
         if(cache->valid == 1 && cache->tag == tag){
             printf("=> Hit!\n");
@@ -103,7 +106,7 @@ int check_cache_data_hit(void *addr, char type) {
             cache->timestamp ++;
             global_timestamp ++; 
             num_cache_hits ++;
-            //return cache->data[0];
+           
 
             if(type=='b'){
                 return cache->data[byte_offset]; 
@@ -156,17 +159,19 @@ int access_memory(void *addr, char type) {
     int cache_index = blockAddr % CACHE_SET_SIZE;
     int word_index = (*(int *)addr) / WORD_SIZE_BYTE;
     //이거는 memory에서 바로 리턴할 경우...
-    //이름을 word_offset으로 하는 게 맞을지 모르겟네 byte_offset이 맞나?
+    //이름을 word_offset으로 하는 게 맞을지 모르겟네 byte_offset이 맞나? >> %니까 byte_offset 일거같은디 
     int word_offset = (*(int *)addr) % WORD_SIZE_BYTE;
     //int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
 
     /* get the entry index by invoking find_entry_index_in_set()
         for copying to the cache */
     int entry_index = find_entry_index_in_set(cache_index);
+
+    int tag = blockAddr / CACHE_SET_SIZE; 
     printf("MEMORY >> word index = %d\n", entry_index);
 
     /* add this main memory access cycle to global access cycle */
-    num_access_cycles+=100;
+    //num_access_cycles+=100;
 
     /* Fetch the data from the main memory and copy them to the cache */
     /* void *addr: addr is byte address, whereas your main memory address is word address due to 'int memory_array[]' */
@@ -176,6 +181,9 @@ int access_memory(void *addr, char type) {
         for(int j=0;j<WORD_SIZE_BYTE;j++){
             cache_array[cache_index][entry_index].data[i]
                 = (memory_array[arrayIndex] >> (i * 8)) & 0xFF;
+        //valid랑 tag 내가 넣었어 
+            cache_array[cache_index][entry_index].valid  = 1; 
+            cache_array[cache_index][entry_index].tag  = tag; 
             i++;
         }
         arrayIndex++;
@@ -189,7 +197,7 @@ int access_memory(void *addr, char type) {
         return (memory_array[word_index] >> (word_offset * 8)) & 0xFFFF;
     }
     else if(type == 'w'){
-        return (memory_array[word_index] >> (word_offset * 8)) & 0xFFFFFF;
+        return (memory_array[word_index] >> (word_offset * 8)) & 0xFFFFFFFF;
     } else return -1;
     // return -1 for unknown type
 }
