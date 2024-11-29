@@ -57,7 +57,7 @@ int main(void) {
     init_memory_content();
     init_cache_content();
     
-    ifp = fopen("access_input.txt", "r"); //ifp = 인풋파일을 '읽기모드'로 열었음 
+    ifp = fopen("access_input2.txt", "r"); //ifp = 인풋파일을 '읽기모드'로 열었음 
     if (ifp == NULL) {
         printf("Can't open input file\n");
         return -1;
@@ -151,6 +151,6 @@ int main(void) {
     fclose(ofp);
     
     print_cache_entries();
-    system("pause");
+    //system("pause");
     return 0;
 }
