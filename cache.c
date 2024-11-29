@@ -93,10 +93,8 @@ int check_cache_data_hit(void *addr, char type) {
                    blockAddr, byte_offset, cache_index, tag);
 
     num_access_cycles++; // 내가추가햇삼 >> 고마어 ㅎㅎㅎㅎ
-    num_bytes++;
-
-   
-
+    global_timestamp++;
+    
     for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
          cache_entry_t *cache = &cache_array[cache_index][i]; 
 
@@ -104,7 +102,6 @@ int check_cache_data_hit(void *addr, char type) {
             printf("=> Hit!\n");
 
             cache->timestamp ++;
-            global_timestamp ++; 
             num_cache_hits ++;
            
 
@@ -181,7 +178,7 @@ int access_memory(void *addr, char type) {
         for(int j=0;j<WORD_SIZE_BYTE;j++){
             cache_array[cache_index][entry_index].data[i]
                 = (memory_array[arrayIndex] >> (i * 8)) & 0xFF;
-        //valid랑 tag 내가 넣었어 
+        //valid랑 tag 내가 넣었어 -> 고마워^.ㅜ
             cache_array[cache_index][entry_index].valid  = 1; 
             cache_array[cache_index][entry_index].tag  = tag; 
             i++;
