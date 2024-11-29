@@ -157,7 +157,7 @@ int access_memory(void *addr, char type) {
     int word_index = (*(int *)addr) / WORD_SIZE_BYTE;
     //이거는 memory에서 바로 리턴할 경우...
     //이름을 word_offset으로 하는 게 맞을지 모르겟네 byte_offset이 맞나? >> %니까 byte_offset 일거같은디 
-    int word_offset = (*(int *)addr) % WORD_SIZE_BYTE;
+    int byte_offset = (*(int *)addr) % WORD_SIZE_BYTE;
     //int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
 
     /* get the entry index by invoking find_entry_index_in_set()
@@ -186,15 +186,17 @@ int access_memory(void *addr, char type) {
         arrayIndex++;
     }
 
+    cache_entry_t *cache= &cache_array[cache_index][entry_index];
     /* Return the accessed data with a suitable type (b, h, or w) */
-     if(type=='b'){
-        return (memory_array[word_index] >> (word_offset * 8)) & 0xFF; 
+    if(type=='b'){
+        return cache->data[byte_offset]; 
     }
     else if(type == 'h'){
-        return (memory_array[word_index] >> (word_offset * 8)) & 0xFFFF;
+
+        return cache ->data[byte_offset]| (cache ->data[byte_offset +1] <<8); 
     }
     else if(type == 'w'){
-        return (memory_array[word_index] >> (word_offset * 8)) & 0xFFFFFFFF;
-    } else return -1;
+        return (cache ->data[byte_offset+3]<< 24) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset]) ; 
+    }
     // return -1 for unknown type
 }
