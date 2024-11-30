@@ -107,14 +107,17 @@ int check_cache_data_hit(void *addr, char type) {
             printf("캐시 태그는: %d", cache->tag);  
 
             if(type=='b'){
+                num_bytes +=1; 
                 return cache->data[byte_offset]; 
             }
             else if(type == 'h'){
+                num_bytes+=2;
 
                 return (unsigned char)cache ->data[byte_offset]
                         | cache ->data[byte_offset +1] <<8; 
             }
             else if(type == 'w'){
+                num_bytes+=4;
                 return (unsigned char)cache ->data[byte_offset]
                         |((unsigned char)cache ->data[byte_offset+1]) << 8
                         |((unsigned char)cache ->data[byte_offset+2]) << 16
@@ -201,13 +204,16 @@ int access_memory(void *addr, char type) {
     cache_entry_t *cache= &cache_array[cache_index][entry_index];
     /* Return the accessed data with a suitable type (b, h, or w) */
     if(type=='b'){
+        num_bytes+=1;  // byte니까 num_bytes(액세스 바이트) +1 해줌 
         return cache->data[byte_offset]; 
     }
     else if(type == 'h'){
+        num_bytes+=2;
         return (unsigned char)cache ->data[byte_offset]
                 | (cache ->data[byte_offset +1]) <<8; 
     }
     else if(type == 'w'){
+        num_bytes+=4;
         return (unsigned char)cache ->data[byte_offset]
                 |((unsigned char)cache ->data[byte_offset+1]) << 8
                 |((unsigned char)cache ->data[byte_offset+2]) << 16

@@ -1,15 +1,16 @@
 [Accessed Data]
-334	b	0xffffff9a
-490	h	0xffffab23
-329	w	0xffffffdc
+334	b	0x9a
+490	h	0xab23
+329	w	0x54349acb
 489	h	0x2354
-338	h	0xffffffab
+338	h	0x45ab
 279	b	0x56
-148	w	0xffffa976
+148	w	0x5689a976
 339	b	0x45
 ----------------------------
-[Direct mapped Cache performance]
-cache hit = 0  
-cache hit = 808
-Hit ratio = 0.00  (0/8)
-Bandwidth = 0.01  (10/808)
+[2-way set associative Cache performance]
+cache hit = 2  
+cache hit = 608
+Hit ratio = 0.25  (2/8)
+num_bytes = 17
+Bandwidth = 0.03  (17/608)
