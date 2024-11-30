@@ -93,7 +93,7 @@ int check_cache_data_hit(void *addr, char type) {
                    blockAddr, byte_offset, cache_index, tag);
 
     num_access_cycles++; // 내가추가햇삼 >> 고마어 ㅎㅎㅎㅎ
-    global_timestamp++;
+
     
     for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
          cache_entry_t *cache = &cache_array[cache_index][i]; 
@@ -101,9 +101,10 @@ int check_cache_data_hit(void *addr, char type) {
         if(cache->valid == 1 && cache->tag == tag){
             printf("=> Hit!\n");
 
-            cache->timestamp ++;
+            cache->timestamp = global_timestamp++;
             num_cache_hits ++;
-           
+            cache->tag =  tag;
+            printf("캐시 태그는: %d", cache->tag);  
 
             if(type=='b'){
                 return cache->data[byte_offset]; 
@@ -113,25 +114,29 @@ int check_cache_data_hit(void *addr, char type) {
                 return cache ->data[byte_offset]| (cache ->data[byte_offset +1] <<8); 
             }
             else if(type == 'w'){
-                return cache ->data[byte_offset] |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+3] << 24) ;            }
+                return cache ->data[byte_offset] |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+3] << 24) ;
+            }
         }
         
     }
     num_cache_misses++;
     printf("=> Miss!\n");
+    
     return -1; 
     
 }
 // This function is to find the entry index in set for copying to cache
 int find_entry_index_in_set(int cache_index) {
-    int entry_index;
+    int entry_index=0;
     
     // set 어쩌고에서는 cache_index=집합 번호
     /* Check if there exists any empty cache space by checking 'valid' */
-    for(int i=0;i<DEFAULT_CACHE_ASSOC;i++)
+    for(int i=0;i<DEFAULT_CACHE_ASSOC;i++){
         if(cache_array[cache_index][i].valid==0)
             return entry_index = i;
 
+    }
+        
     /* If the set has only 1 entry, return index 0 */
     /* Otherwise, search over all entries
     to find the least recently used entry by checking 'timestamp' */
@@ -139,8 +144,8 @@ int find_entry_index_in_set(int cache_index) {
     else{
         int min_timestamp = cache_array[cache_index][0].timestamp;
         for(int i=1;i<DEFAULT_CACHE_ASSOC;i++) {
-            if(min_timestamp > cache_array[cache_index][0].timestamp){
-                min_timestamp = cache_array[cache_index][0].timestamp;
+            if(min_timestamp > cache_array[cache_index][i].timestamp){
+                min_timestamp = cache_array[cache_index][i].timestamp;
                 entry_index = i;
             }
         }
@@ -181,8 +186,13 @@ int access_memory(void *addr, char type) {
         }
         arrayIndex++;
     }
+    //valid랑 tag 내가 넣었어 -> 고마워^.ㅜ
     cache_array[cache_index][entry_index].valid  = 1; 
-    cache_array[cache_index][entry_index].tag  = tag; 
+    cache_array[cache_index][entry_index].tag  = tag;
+    cache_array[cache_index][entry_index].timestamp = global_timestamp++; 
+    printf("미스난 태그는: %d",cache_array[cache_index][entry_index].tag); 
+            printf("global time: %d", global_timestamp);
+            printf("cache의 time: %d", cache_array[cache_index][entry_index].timestamp );
 
     cache_entry_t *cache= &cache_array[cache_index][entry_index];
     /* Return the accessed data with a suitable type (b, h, or w) */

@@ -1,0 +1,15 @@
+[Accessed Data]
+334	b	0xffffff9a
+490	h	0xffffab23
+329	w	0xffffffdc
+489	h	0x2354
+338	h	0xffffffab
+279	b	0x56
+148	w	0xffffa976
+339	b	0x45
+----------------------------
+[Direct mapped Cache performance]
+cache hit = 0  
+cache hit = 808
+Hit ratio = 0.00  (0/8)
+Bandwidth = 0.01  (10/808)

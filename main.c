@@ -13,7 +13,7 @@
 #include <string.h> // 내가 했어..
 #include <stdlib.h> //내가 했어..
 #include "cache_impl.h"
-//#include "cache.c"
+#include "cache.c"
 
 int num_cache_hits = 0;
 int num_cache_misses = 0;
@@ -141,7 +141,7 @@ int main(void) {
     
     fprintf(ofp,"cache hit = %d  \n", num_cache_hits); 
     fprintf(ofp,"cache hit = %d\n", num_access_cycles); 
-    fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n", (float)num_cache_hits/global_timestamp, num_cache_hits,num_bytes); 
+    fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n", (float)num_cache_hits/global_timestamp, num_cache_hits,global_timestamp); 
     fprintf(ofp,"Bandwidth = %.2f  (10/%d)\n", (float)10/num_access_cycles, num_access_cycles); 
 
 
@@ -151,6 +151,6 @@ int main(void) {
     fclose(ofp);
     
     print_cache_entries();
-    system("pause");
+    //system("pause");
     return 0;
 }
