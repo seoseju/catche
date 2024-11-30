@@ -142,7 +142,8 @@ int main(void) {
     fprintf(ofp,"cache hit = %d  \n", num_cache_hits); 
     fprintf(ofp,"cache hit = %d\n", num_access_cycles); 
     fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n", (float)num_cache_hits/global_timestamp, num_cache_hits,global_timestamp); 
-    fprintf(ofp,"Bandwidth = %.2f  (10/%d)\n", (float)10/num_access_cycles, num_access_cycles); 
+    fprintf(ofp,"num_bytes = %d\n", num_bytes); 
+    fprintf(ofp,"Bandwidth = %.2f  (%d/%d)\n", (float)num_bytes/num_access_cycles, num_bytes,num_access_cycles); 
 
 
     printf("캐시 히트:%d",num_cache_hits); 
