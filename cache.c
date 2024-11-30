@@ -208,7 +208,5 @@ int access_memory(void *addr, char type) {
                 |((unsigned char)cache ->data[byte_offset+1]) << 8
                 |((unsigned char)cache ->data[byte_offset+2]) << 16
                 |(cache ->data[byte_offset+3]) << 24;
-    } else -1;
-
-    return -1; //return -1 for unknown type
+    } else return -1; //return -1 for unknown type
 }
