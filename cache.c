@@ -113,8 +113,7 @@ int check_cache_data_hit(void *addr, char type) {
                 return cache ->data[byte_offset]| (cache ->data[byte_offset +1] <<8); 
             }
             else if(type == 'w'){
-                return (cache ->data[byte_offset+3]<< 24) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset]) ; 
-            }
+                return cache ->data[byte_offset] |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+3] << 24) ;            }
         }
         
     }
@@ -178,13 +177,12 @@ int access_memory(void *addr, char type) {
         for(int j=0;j<WORD_SIZE_BYTE;j++){
             cache_array[cache_index][entry_index].data[i]
                 = (memory_array[arrayIndex] >> (i * 8)) & 0xFF;
-        //valid랑 tag 내가 넣었어 -> 고마워^.ㅜ
-            cache_array[cache_index][entry_index].valid  = 1; 
-            cache_array[cache_index][entry_index].tag  = tag; 
             i++;
         }
         arrayIndex++;
     }
+    cache_array[cache_index][entry_index].valid  = 1; 
+    cache_array[cache_index][entry_index].tag  = tag; 
 
     cache_entry_t *cache= &cache_array[cache_index][entry_index];
     /* Return the accessed data with a suitable type (b, h, or w) */
@@ -192,11 +190,10 @@ int access_memory(void *addr, char type) {
         return cache->data[byte_offset]; 
     }
     else if(type == 'h'){
-
         return cache ->data[byte_offset]| (cache ->data[byte_offset +1] <<8); 
     }
     else if(type == 'w'){
-        return (cache ->data[byte_offset+3]<< 24) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset]) ; 
+        return cache ->data[byte_offset] |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+3] << 24) ;
     }
     // return -1 for unknown type
 }
