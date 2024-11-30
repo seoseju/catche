@@ -13,7 +13,6 @@
 #include <string.h> // 내가 했어..
 #include <stdlib.h> //내가 했어..
 #include "cache_impl.h"
-#include "cache.c"
 
 int num_cache_hits = 0;
 int num_cache_misses = 0;
@@ -151,6 +150,6 @@ int main(void) {
     fclose(ofp);
     
     print_cache_entries();
-    //system("pause");
+    system("pause");
     return 0;
 }

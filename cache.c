@@ -111,10 +111,14 @@ int check_cache_data_hit(void *addr, char type) {
             }
             else if(type == 'h'){
 
-                return cache ->data[byte_offset]| (cache ->data[byte_offset +1] <<8); 
+                return (unsigned char)cache ->data[byte_offset]
+                        | cache ->data[byte_offset +1] <<8; 
             }
             else if(type == 'w'){
-                return cache ->data[byte_offset] |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+3] << 24) ;
+                return (unsigned char)cache ->data[byte_offset]
+                        |((unsigned char)cache ->data[byte_offset+1]) << 8
+                        |((unsigned char)cache ->data[byte_offset+2]) << 16
+                        |cache ->data[byte_offset+3] << 24 ;
             }
         }
         
@@ -181,7 +185,7 @@ int access_memory(void *addr, char type) {
     while(i<DEFAULT_CACHE_BLOCK_SIZE_BYTE){
         for(int j=0;j<WORD_SIZE_BYTE;j++){
             cache_array[cache_index][entry_index].data[i]
-                = (memory_array[arrayIndex] >> (i * 8)) & 0xFF;
+                = (memory_array[arrayIndex] >> (j * 8)) & 0xFF;
             i++;
         }
         arrayIndex++;
@@ -200,10 +204,14 @@ int access_memory(void *addr, char type) {
         return cache->data[byte_offset]; 
     }
     else if(type == 'h'){
-        return cache ->data[byte_offset]| (cache ->data[byte_offset +1] <<8); 
+        return (unsigned char)cache ->data[byte_offset]
+                | (cache ->data[byte_offset +1]) <<8; 
     }
     else if(type == 'w'){
-        return cache ->data[byte_offset] |(cache ->data[byte_offset+1] << 8) |(cache ->data[byte_offset+2] << 16) |(cache ->data[byte_offset+3] << 24) ;
-    }
+        return (unsigned char)cache ->data[byte_offset]
+                |((unsigned char)cache ->data[byte_offset+1]) << 8
+                |((unsigned char)cache ->data[byte_offset+2]) << 16
+                |(cache ->data[byte_offset+3]) << 24;
+    } else -1;
     // return -1 for unknown type
 }
