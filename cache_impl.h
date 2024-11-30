@@ -38,7 +38,7 @@ typedef struct cache_entry {
     int valid;
     int tag;
     int timestamp;
-    unsigned data[DEFAULT_CACHE_BLOCK_SIZE_BYTE];
+    unsigned char data[DEFAULT_CACHE_BLOCK_SIZE_BYTE];
 } cache_entry_t;
 
 

@@ -12,5 +12,4 @@
 cache hit = 2  
 cache hit = 608
 Hit ratio = 0.25  (2/8)
-num_bytes = 17
 Bandwidth = 0.03  (17/608)
