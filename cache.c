@@ -81,18 +81,15 @@ void print_cache_entries() {
 
 int check_cache_data_hit(void *addr, char type) {
 
-    /* Fill out here */
-    //여기 constant 변수명으로 수정함
     int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
     int cache_index = blockAddr % CACHE_SET_SIZE; 
     int tag= blockAddr / CACHE_SET_SIZE; 
     int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
-    //int word_index = (*(int *)addr) / CACHE_SET_SIZE; 
+
+    num_access_cycles++;
 
     printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",
                    blockAddr, byte_offset, cache_index, tag);
-
-    num_access_cycles++; // 내가추가햇삼 >> 고마어 ㅎㅎㅎㅎ
 
     
     for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
@@ -104,7 +101,6 @@ int check_cache_data_hit(void *addr, char type) {
             cache->timestamp = global_timestamp++;
             num_cache_hits ++;
             cache->tag =  tag;
-            printf("캐시 태그는: %d", cache->tag);  
 
             if(type=='b'){
                 num_bytes +=1; 
@@ -112,7 +108,6 @@ int check_cache_data_hit(void *addr, char type) {
             }
             else if(type == 'h'){
                 num_bytes+=2;
-
                 return (unsigned char)cache ->data[byte_offset]
                         | cache ->data[byte_offset +1] <<8; 
             }
@@ -132,16 +127,15 @@ int check_cache_data_hit(void *addr, char type) {
     return -1; 
     
 }
+
 // This function is to find the entry index in set for copying to cache
 int find_entry_index_in_set(int cache_index) {
     int entry_index=0;
     
-    // set 어쩌고에서는 cache_index=집합 번호
     /* Check if there exists any empty cache space by checking 'valid' */
     for(int i=0;i<DEFAULT_CACHE_ASSOC;i++){
         if(cache_array[cache_index][i].valid==0)
             return entry_index = i;
-
     }
         
     /* If the set has only 1 entry, return index 0 */
@@ -166,20 +160,18 @@ int access_memory(void *addr, char type) {
     int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
     int cache_index = blockAddr % CACHE_SET_SIZE;
     int word_index = (*(int *)addr) / WORD_SIZE_BYTE;
-    //이거는 memory에서 바로 리턴할 경우...
-    //이름을 word_offset으로 하는 게 맞을지 모르겟네 byte_offset이 맞나? >> %니까 byte_offset 일거같은디 
     int byte_offset = (*(int *)addr) % WORD_SIZE_BYTE;
-    //int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
-
+    
     /* get the entry index by invoking find_entry_index_in_set()
         for copying to the cache */
     int entry_index = find_entry_index_in_set(cache_index);
 
     int tag = blockAddr / CACHE_SET_SIZE; 
-    printf("MEMORY >> word index = %d\n", entry_index);
 
+    printf("MEMORY >> word index = %d\n", entry_index);
+   
     /* add this main memory access cycle to global access cycle */
-    //num_access_cycles+=100;
+    num_access_cycles+=100;
 
     /* Fetch the data from the main memory and copy them to the cache */
     /* void *addr: addr is byte address, whereas your main memory address is word address due to 'int memory_array[]' */
@@ -193,18 +185,16 @@ int access_memory(void *addr, char type) {
         }
         arrayIndex++;
     }
-    //valid랑 tag 내가 넣었어 -> 고마워^.ㅜ
+
     cache_array[cache_index][entry_index].valid  = 1; 
     cache_array[cache_index][entry_index].tag  = tag;
     cache_array[cache_index][entry_index].timestamp = global_timestamp++; 
-    printf("미스난 태그는: %d",cache_array[cache_index][entry_index].tag); 
-            printf("global time: %d", global_timestamp);
-            printf("cache의 time: %d", cache_array[cache_index][entry_index].timestamp );
-
+   
     cache_entry_t *cache= &cache_array[cache_index][entry_index];
+
     /* Return the accessed data with a suitable type (b, h, or w) */
     if(type=='b'){
-        num_bytes+=1;  // byte니까 num_bytes(액세스 바이트) +1 해줌 
+        num_bytes+=1;
         return cache->data[byte_offset]; 
     }
     else if(type == 'h'){
@@ -219,5 +209,6 @@ int access_memory(void *addr, char type) {
                 |((unsigned char)cache ->data[byte_offset+2]) << 16
                 |(cache ->data[byte_offset+3]) << 24;
     } else -1;
-    // return -1 for unknown type
+
+    return -1; //return -1 for unknown type
 }

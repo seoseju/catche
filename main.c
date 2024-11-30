@@ -10,10 +10,10 @@
  */
 
 #include <stdio.h>
-#include <string.h> // 내가 했어..
-#include <stdlib.h> //내가 했어..
+#include <string.h> 
+#include <stdlib.h>
 #include "cache_impl.h"
-//#include "cache.c"
+#include "cache.c"
 
 int num_cache_hits = 0;
 int num_cache_misses = 0;
@@ -31,15 +31,15 @@ int retrieve_data(void *addr, char data_type) {
     value_returned = check_cache_data_hit(addr, data_type); 
 
     /* In case of the cache miss event, retrieve data from the main memory  by invoking access_memory()*/
+
     if(value_returned == -1){
-        num_access_cycles+=100;
         value_returned = access_memory(addr, data_type); 
 
         /* If there is no data neither in cache nor memory, return -1, 
         else return data */
-        if(value_returned == -1){
-            return -1; 
-        }
+
+        if(value_returned == -1) return -1; 
+        
         /* access_memory 성공 !! */
         else return value_returned; 
     }
@@ -62,7 +62,7 @@ int main(void) {
         printf("Can't open input file\n");
         return -1;
     }
-    ofp = fopen("^^access_output.txt", "w"); //ofp = 아웃풋파일을 쓰기 모드로 열었음 
+    ofp = fopen("access_output.txt", "w"); //ofp = 아웃풋파일을 쓰기 모드로 열었음 
     if (ofp == NULL) {
         printf("Can't open output file\n");
         fclose(ifp);
@@ -71,16 +71,12 @@ int main(void) {
     
     /* Fill out here by invoking retrieve_data() */
 
-    //인풋 파일에서 행 수 읽기 .. 하... 그냥 "많아봤자 10행이겠지" 생각해서 max_lines = 10으로 했음..
-    //ㅋㅋㅋㅋㅋㅋㅋ
-    //NULL로 수정할 수 잇을까
-
     // 인풋파일 뜯어서 array 이차원 배열에 저장 
     // array[0][1] : 첫번째 줄의 두번째 단어 == b
 
-    char line[101];
-    char *array[100];
-    int lineCount=0;
+    char line[101]; //인풋파일 줄 나눠 넣을 배열
+    char *array[100]; //쪼개진 단어 넣을 배열
+    int lineCount=0; //줄 수 세기
 
     while(fgets(line, sizeof(line), ifp)!=NULL && lineCount < 100){
         array[lineCount] = malloc(sizeof(char)*101);
@@ -97,8 +93,9 @@ int main(void) {
         lineCount++;
     }
 
-    // array[i][1] 로 type읽어서 access_type 정하고 array[i][0]으로 access_addr 정하기 
-
+    // array[i][0]으로 access_addr 정하고
+    // array[i][1]로 type읽어서 access_type 정하기
+     
     char s[1000] = "";
     fprintf(ofp,"[Accessed Data]\n");
 
@@ -114,7 +111,7 @@ int main(void) {
     fprintf(ofp,s); 
     fprintf(ofp,"----------------------------\n") ;
 
-    // cache_set_size에 따라서 이름 바꾸게 했어 
+    // DEFAULT_CACHE_ASSOC에 따라서 이름바꾸기 
     if(DEFAULT_CACHE_ASSOC  == 1)
         fprintf(ofp,"[Direct mapped Cache performance]\n");
     else if(DEFAULT_CACHE_ASSOC  == 2)
@@ -122,20 +119,11 @@ int main(void) {
     else if(DEFAULT_CACHE_ASSOC  == 4)
         fprintf(ofp,"[Fully associative Cache performance]\n");
 
-
-    
-    fprintf(ofp,"cache hit = %d  \n", num_cache_hits); 
-    fprintf(ofp,"access cycles = %d\n", num_access_cycles); 
     fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n", (float)num_cache_hits/global_timestamp, num_cache_hits,global_timestamp); 
     fprintf(ofp,"Bandwidth = %.2f  (%d/%d)\n", (float)num_bytes/num_access_cycles, num_bytes,num_access_cycles); 
 
-
-    printf("캐시 히트:%d",num_cache_hits); 
-    
     fclose(ifp);
     fclose(ofp);
     
-    print_cache_entries();
-    //system("pause");
     return 0;
 }
