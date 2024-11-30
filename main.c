@@ -91,10 +91,15 @@ int main(void) {
         char *word = strtok(line, " "); //공백으로 단어 분리 
         int wordIndex = 0; 
         while(word != NULL && wordIndex < 2){
+           
             strncpy(array[lineCount][wordIndex], word, 9); 
             array[lineCount][wordIndex][9] = '\0'; 
             word = strtok(NULL, " "); 
             wordIndex ++;
+
+             if(array[lineCount][0][0] == NULL){
+                break; 
+            }
         }
         wordCounts[lineCount] = wordIndex; 
         lineCount ++; 
