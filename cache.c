@@ -79,94 +79,96 @@ void print_cache_entries() {
     }
 }
 
+// This function is to check whether cache data hit
 int check_cache_data_hit(void *addr, char type) {
-                                                                        //검사할 데이터의 캐시 자리 정보
-    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE;     //block address = byte address / cache block size 
-    int cache_index = blockAddr % CACHE_SET_SIZE;                       //cache index = block address % cache set size (캐시 세트 개수) 
-    int tag= blockAddr / CACHE_SET_SIZE;                                //tag = block address / cache set size (캐시 세트 개수)
-    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE;   //byte offset = byte address % cache block size 
+    // Information of the target cache block
+    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE;     // block address = byte address / cache block size 
+    int cache_index = blockAddr % CACHE_SET_SIZE;                       // cache index = block address % cache set size (the index of cache entry matched with the block addr) 
+    int tag= blockAddr / CACHE_SET_SIZE;                                // tag = block address / cache set size (the index of cache set matched with the block addr)
+    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE;   // byte offset = byte address % cache block size 
 
-    num_access_cycles++;                                                //cache hit 검사하러 오면서 access cycle 개수 + 1 
-
-    printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",      //캐시 정보가 잘 나오는지 확인용 코드 
+    num_access_cycles++;                                                // increment the number of access cycles by one
+    
+    // debugging code to check if every above cache information is correct
+    printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",      
                    blockAddr, byte_offset, cache_index, tag);
 
     
-    for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){                          //반복문을 associativity 번 돌면서 cache hit 검사 
-         cache_entry_t *cache = &cache_array[cache_index][i];           //cache 포인터로 cache_array[cache_index][i]를 가리킴 
+    for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){                          // loop CACHE_ASSOC times to check cache hit 
+        cache_entry_t *cache = &cache_array[cache_index][i];            // initialize "cache" pointer variable to access "cache_array[cache_index][i]"
 
-        if(cache->valid == 1 && cache->tag == tag){                     //cache_array의 valid 값이 1 이고 검사할 데이터의 tag와 같은지 확인 >> hit 
-            printf("=> Hit!\n");                                        //hit 확인용 코드  
+        if(cache->valid == 1 && cache->tag == tag){                     // if HIT: if valid is '1' and the stored tag is same to one of the target data
+            printf("=> Hit!\n");                                        // debuggin code to check HIT  
                                                                     
-            cache->timestamp = global_timestamp++;                      //히트 시 cache_array의 timestamp를 global_timestamp로 맞추고 globalstamp + 1 증가 
-            num_cache_hits ++;                                          //hit 횟수 + 1    
-            cache->tag =  tag;                                          //cache_array의 tag를 hit한 데이터의 tag로 바꿔줌 
+            cache->timestamp = global_timestamp++;                      // update timestamp of the cache block and increment global timestamp by one
+            num_cache_hits ++;                                          // increment the number of cache hit by one    
+            cache->tag =  tag;                                          // set the tag of cache block to one of hit data
 
-            if(type=='b'){                                              //hit한 데이터가 "byte" type일 경우 
-                num_bytes +=1;                                          //accessed byte + 1 
-                return cache->data[byte_offset];                        //cache_array의 data값의 byte_offset 인덱스에 접근하여 한 바이트만 반환한다 
+            if(type=='b'){                                              // if hit data type is "byte" 
+                num_bytes +=1;                                          // byte type: increment the number of accessed bytes by one
+                return cache->data[byte_offset];                        // return one byte data from byte_offset index of the stored cache
             }
-            else if(type == 'h'){                                       //hit한 데이터가 "halfword" type일 경우 
-                num_bytes+=2;                                           //accessed byte + 2 
-                return (unsigned char)cache ->data[byte_offset]         //cache_array의 data값의 byte_offset 인덱스에 접근하여 한 바이트를 가져오고
-                        | cache ->data[byte_offset +1] <<8;             //byte_offset + 1 인덱스에 접근하여 한 바이트를 더 갖고오고 8비트(1바이트) 왼쪽으로 이동시킨 후 반환한다. 
+            else if(type == 'h'){                                       // if hit data type is "halfword"  
+                num_bytes+=2;                                           // halfword type: increment the number of accessed bytes by two
+                return (unsigned char)cache ->data[byte_offset]         // the first byte from byte_offset index of the stored cache
+                        | cache ->data[byte_offset +1] <<8;             // the second byte from (byte_offset+1) index and left-shift by 8 >> combine the return value by OR operation
             }
-            else if(type == 'w'){                                       //hit한 데이터가 "word" type일 경우 
-                num_bytes+=4;                                           //accessed byte + 4
-                return (unsigned char)cache ->data[byte_offset]         //cache_array의 data값의 byte_offset 인덱스에 접근하여 한 바이트를 가져온다.
-                        |((unsigned char)cache ->data[byte_offset+1]) << 8  //(byte_offset + 1) 인덱스에 접근하여 8비트(1바이트) 왼쪽으로 이동시킨 후 1바이트를 가져온다.
-                        |((unsigned char)cache ->data[byte_offset+2]) << 16 //(byte_offset + 2) 인덱스에 접근하여 16비트(2바이트) 왼쪽으로 이동시킨 후 1바이트를 가져온다.
-                        |cache ->data[byte_offset+3] << 24 ;                //(byte_offset + 3) 인덱스에 접근하여 24비트(4바이트) 왼쪽으로 이동시킨 후 1바이트를 가져온다. >> 모두 합쳐 반환한다.
+            else if(type == 'w'){                                       // if hit data type is "word" 
+                num_bytes+=4;                                           // word type: increment the number of accessed bytes by four
+                return (unsigned char)cache ->data[byte_offset]         // return the first byte from byte_offset index of the stored cache
+                        |((unsigned char)cache ->data[byte_offset+1]) << 8  // the second byte from (byte_offset+1) index and left-shift by 8
+                        |((unsigned char)cache ->data[byte_offset+2]) << 16 // the third byte from (byte_offset+2) index and left-shift by 16
+                        |cache ->data[byte_offset+3] << 24 ;                // the fourth byte from (byte_offset+3) index and left-shift by 24 >> combine the return value by OR operation
             }
         }
         
     }
-    num_cache_misses++;                                                 //miss 시 캐시 miss 횟수 + 1
-    printf("=> Miss!\n");                                               //miss 확인용 코드 
+
+    // MISS case
+    num_cache_misses++;                                                 // increment the number of cache missis by one
+    printf("=> Miss!\n");                                               // debugging code to check MISS
     
-    return -1; 
+    return -1;                                                          // return -1 for cache miss case
     
 }
 
 // This function is to find the entry index in set for copying to cache
 int find_entry_index_in_set(int cache_index) {
-    int entry_index=0;
+    int entry_index=0;                                                  // initialize the return value "entry_index" to zero
     
     /* Check if there exists any empty cache space by checking 'valid' */
-    for(int i=0;i<DEFAULT_CACHE_ASSOC;i++){
-        if(cache_array[cache_index][i].valid==0)
-            return entry_index = i;
+    for(int i=0;i<DEFAULT_CACHE_ASSOC;i++){                             // loop DEFAULT_CACHE_ASSOC times to check if any block in the set has invalid space
+        if(cache_array[cache_index][i].valid==0)                        // if any cache block is invalid
+            return entry_index = i;                                     // return that entry index to put the memory data into that invalid block
     }
-        
-    /* If the set has only 1 entry, return index 0 */
-    /* Otherwise, search over all entries
-    to find the least recently used entry by checking 'timestamp' */
-    if(CACHE_SET_SIZE == 1) entry_index = 0;
-    else{
-        int min_timestamp = cache_array[cache_index][0].timestamp;
-        for(int i=1;i<DEFAULT_CACHE_ASSOC;i++) {
-            if(min_timestamp > cache_array[cache_index][i].timestamp){
-                min_timestamp = cache_array[cache_index][i].timestamp;
-                entry_index = i;
+
+    // if any block in the set has other data
+    if(CACHE_SET_SIZE == 1) entry_index = 0;                            // If the set has only 1 entry, return index 0
+    else{            //Otherwise, search over all entries to find the least recently used entry by checking 'timestamp'
+        int min_timestamp = cache_array[cache_index][0].timestamp;      // initailize "min_timestamp" to one of the first cache block
+        for(int i=1;i<DEFAULT_CACHE_ASSOC;i++) {                        // loop DEFAULT_CACHE_ASSOC to find the minimal timestamp
+            if(min_timestamp > cache_array[cache_index][i].timestamp){  // if there is smaller timestamp than "min_timestamp"
+                min_timestamp = cache_array[cache_index][i].timestamp;  // update the "min_timestamp"
+                entry_index = i;                                        // update "entry_index" to the index of the block with the minimal timestamp
             }
         }
     }
 
     /* return the cache index for copying from memory*/
-    return entry_index; 
+    return entry_index;                                                 // return the "entry_index"
 }
 
-int access_memory(void *addr, char type) {
-    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
-    int cache_index = blockAddr % CACHE_SET_SIZE;
-    int word_index = (*(int *)addr) / WORD_SIZE_BYTE;
-    int byte_offset = (*(int *)addr) % WORD_SIZE_BYTE;
+// This function is to access memory data and store it to cache
+int access_memory(void *addr, char type) {                              // take address and type as parameters
+    // Information of the target memory address
+    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE;     // block address = byte address / cache block size
+    int cache_index = blockAddr % CACHE_SET_SIZE;                       // cache index = block address % cache set size (the index of cache entry matched with the block addr) 
+    int tag = blockAddr / CACHE_SET_SIZE;                               // tag = block address / cache set size (the index of cache set matched with the block addr)
+    int word_index = (*(int *)addr) / WORD_SIZE_BYTE;                   // word index = byte address / num of word byte (the index of cache set matched with the block addr)
+    int byte_offset = (*(int *)addr) % WORD_SIZE_BYTE;                  // byte offset = byte address % num of word byte (the access start address in each memory entry)
     
-    /* get the entry index by invoking find_entry_index_in_set()
-        for copying to the cache */
+    // get the entry index by invoking find_entry_index_in_set() for copying to the cache
     int entry_index = find_entry_index_in_set(cache_index);
-
-    int tag = blockAddr / CACHE_SET_SIZE; 
 
     printf("MEMORY >> word index = %d\n", entry_index);
    
@@ -176,37 +178,37 @@ int access_memory(void *addr, char type) {
     /* Fetch the data from the main memory and copy them to the cache */
     /* void *addr: addr is byte address, whereas your main memory address is word address due to 'int memory_array[]' */
     int i=0;
-    int arrayIndex = word_index;
-    while(i<DEFAULT_CACHE_BLOCK_SIZE_BYTE){
-        for(int j=0;j<WORD_SIZE_BYTE;j++){
-            cache_array[cache_index][entry_index].data[i]
+    int arrayIndex = word_index;                                        // initialize "arrayIndex" value to "word_index" to store two entries in the memory
+    while(i<DEFAULT_CACHE_BLOCK_SIZE_BYTE){                             // loop block_size times to store data as each byte
+        for(int j=0;j<WORD_SIZE_BYTE;j++){                              // loop word_size times to load data from each memory entry (word size)
+            cache_array[cache_index][entry_index].data[i]               // store ONE BYTE data from memory entry to cache entry
                 = (memory_array[arrayIndex] >> (j * 8)) & 0xFF;
-            i++;
+            i++;                                                        // increment the number of times accessing one byte
         }
-        arrayIndex++;
+        arrayIndex++;                                                   // increment "arrayIndex" to move to the next array entry
     }
 
-    cache_array[cache_index][entry_index].valid  = 1;           //cache_array의 valid 값을 1로 바꾼다
-    cache_array[cache_index][entry_index].tag  = tag;           //cache_array의 tag값을 데이터의 tag값으로 바꾼다 
-    cache_array[cache_index][entry_index].timestamp = global_timestamp++;   //cache_array의 timestamp를 global_timestamp로 바꾸고 global_timestamp를 1 증가한다
+    cache_array[cache_index][entry_index].valid  = 1;                       // set the valid of cache_array to '1'
+    cache_array[cache_index][entry_index].tag  = tag;                       // update the tag of the cache_array to one of the given address
+    cache_array[cache_index][entry_index].timestamp = global_timestamp++;   // update timestamp of the cache block and increment global timestamp by one
    
-    cache_entry_t *cache= &cache_array[cache_index][entry_index];
+    cache_entry_t *cache= &cache_array[cache_index][entry_index];       // declare cache_entry_t pointer as cache
 
     /* Return the accessed data with a suitable type (b, h, or w) */
     if(type=='b'){
-        num_bytes+=1;                       //byte 타입이므로 액세스한 바이트를 1 증가시킨다
-        return cache->data[byte_offset]; 
+        num_bytes+=1;                                   // byte type: increment the number of accessed bytes by one
+        return cache->data[byte_offset];                // return one byte data from newly updated cache
     }
     else if(type == 'h'){
-        num_bytes+=2;                      //halfword 타입이므로 액세스한 바이트를 2 증가시킨다
-        return (unsigned char)cache ->data[byte_offset]
-                | (cache ->data[byte_offset +1]) <<8; 
+        num_bytes+=2;                                   // halfword type: increment the number of accessed bytes by two
+        return (unsigned char)cache ->data[byte_offset] // return two byte data from newly updated cache
+                | (cache ->data[byte_offset +1]) <<8;   // using shift operation and bit mask
     }
     else if(type == 'w'){   
-        num_bytes+=4;                      //word 타입이므로 액세스한 바이트를 4 증가시킨다 
-        return (unsigned char)cache ->data[byte_offset]
+        num_bytes+=4;                                   // word type: increment the number of accessed bytes by four
+        return (unsigned char)cache ->data[byte_offset] // return four byte data from newly updated cache
                 |((unsigned char)cache ->data[byte_offset+1]) << 8
                 |((unsigned char)cache ->data[byte_offset+2]) << 16
                 |(cache ->data[byte_offset+3]) << 24;
-    } else return -1; //return -1 for unknown type
+    } else return -1;                                   //return -1 for unknown type
 }

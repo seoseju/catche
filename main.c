@@ -13,7 +13,7 @@
 #include <string.h> 
 #include <stdlib.h>
 #include "cache_impl.h"
-#include "cache.c"
+//#include "cache.c"
 
 int num_cache_hits = 0;
 int num_cache_misses = 0;
@@ -104,7 +104,7 @@ int main(void) {
         access_type = array[i][100];
         accessed_data = retrieve_data(&access_addr, access_type);   //retrieve_data()의 반환값을 accessed_data에 저장한다
         print_cache_entries();
-        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%lu\t%c\t%#x\n",access_addr,access_type,accessed_data);
+        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%d\t%c\t%#x\n",access_addr,access_type,accessed_data);
     }
 
     // output파일 출력
