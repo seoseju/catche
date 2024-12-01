@@ -1,6 +1,6 @@
 [Accessed Data]
-334	b	0x9a
-490	h	0xab23
+334	b	0xffffff9a
+490	h	0xffffab23
 329	w	0x54349acb
 489	h	0x2354
 338	h	0x45ab

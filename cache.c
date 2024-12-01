@@ -80,49 +80,49 @@ void print_cache_entries() {
 }
 
 int check_cache_data_hit(void *addr, char type) {
+                                                                        //검사할 데이터의 캐시 자리 정보
+    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE;     //block address = byte address / cache block size 
+    int cache_index = blockAddr % CACHE_SET_SIZE;                       //cache index = block address % cache set size (캐시 세트 개수) 
+    int tag= blockAddr / CACHE_SET_SIZE;                                //tag = block address / cache set size (캐시 세트 개수)
+    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE;   //byte offset = byte address % cache block size 
 
-    int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
-    int cache_index = blockAddr % CACHE_SET_SIZE; 
-    int tag= blockAddr / CACHE_SET_SIZE; 
-    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE; 
+    num_access_cycles++;                                                //cache hit 검사하러 오면서 access cycle 개수 + 1 
 
-    num_access_cycles++;
-
-    printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",
+    printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",      //캐시 정보가 잘 나오는지 확인용 코드 
                    blockAddr, byte_offset, cache_index, tag);
 
     
-    for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){
-         cache_entry_t *cache = &cache_array[cache_index][i]; 
+    for(int i =0; i<DEFAULT_CACHE_ASSOC; i++){                          //반복문을 associativity 번 돌면서 cache hit 검사 
+         cache_entry_t *cache = &cache_array[cache_index][i];           //cache 포인터로 cache_array[cache_index][i]를 가리킴 
 
-        if(cache->valid == 1 && cache->tag == tag){
-            printf("=> Hit!\n");
+        if(cache->valid == 1 && cache->tag == tag){                     //cache_array의 valid 값이 1 이고 검사할 데이터의 tag와 같은지 확인 >> hit 
+            printf("=> Hit!\n");                                        //hit 확인용 코드  
+                                                                    
+            cache->timestamp = global_timestamp++;                      //히트 시 cache_array의 timestamp를 global_timestamp로 맞추고 globalstamp + 1 증가 
+            num_cache_hits ++;                                          //hit 횟수 + 1    
+            cache->tag =  tag;                                          //cache_array의 tag를 hit한 데이터의 tag로 바꿔줌 
 
-            cache->timestamp = global_timestamp++;
-            num_cache_hits ++;
-            cache->tag =  tag;
-
-            if(type=='b'){
-                num_bytes +=1; 
-                return cache->data[byte_offset]; 
+            if(type=='b'){                                              //hit한 데이터가 "byte" type일 경우 
+                num_bytes +=1;                                          //accessed byte + 1 
+                return cache->data[byte_offset];                        //cache_array의 data값의 byte_offset 인덱스에 접근하여 한 바이트만 반환한다 
             }
-            else if(type == 'h'){
-                num_bytes+=2;
-                return (unsigned char)cache ->data[byte_offset]
-                        | cache ->data[byte_offset +1] <<8; 
+            else if(type == 'h'){                                       //hit한 데이터가 "halfword" type일 경우 
+                num_bytes+=2;                                           //accessed byte + 2 
+                return (unsigned char)cache ->data[byte_offset]         //cache_array의 data값의 byte_offset 인덱스에 접근하여 한 바이트를 가져오고
+                        | cache ->data[byte_offset +1] <<8;             //byte_offset + 1 인덱스에 접근하여 한 바이트를 더 갖고오고 8비트(1바이트) 왼쪽으로 이동시킨 후 반환한다. 
             }
-            else if(type == 'w'){
-                num_bytes+=4;
-                return (unsigned char)cache ->data[byte_offset]
-                        |((unsigned char)cache ->data[byte_offset+1]) << 8
-                        |((unsigned char)cache ->data[byte_offset+2]) << 16
-                        |cache ->data[byte_offset+3] << 24 ;
+            else if(type == 'w'){                                       //hit한 데이터가 "word" type일 경우 
+                num_bytes+=4;                                           //accessed byte + 4
+                return (unsigned char)cache ->data[byte_offset]         //cache_array의 data값의 byte_offset 인덱스에 접근하여 한 바이트를 가져온다.
+                        |((unsigned char)cache ->data[byte_offset+1]) << 8  //(byte_offset + 1) 인덱스에 접근하여 8비트(1바이트) 왼쪽으로 이동시킨 후 1바이트를 가져온다.
+                        |((unsigned char)cache ->data[byte_offset+2]) << 16 //(byte_offset + 2) 인덱스에 접근하여 16비트(2바이트) 왼쪽으로 이동시킨 후 1바이트를 가져온다.
+                        |cache ->data[byte_offset+3] << 24 ;                //(byte_offset + 3) 인덱스에 접근하여 24비트(4바이트) 왼쪽으로 이동시킨 후 1바이트를 가져온다. >> 모두 합쳐 반환한다.
             }
         }
         
     }
-    num_cache_misses++;
-    printf("=> Miss!\n");
+    num_cache_misses++;                                                 //miss 시 캐시 miss 횟수 + 1
+    printf("=> Miss!\n");                                               //miss 확인용 코드 
     
     return -1; 
     
@@ -186,24 +186,24 @@ int access_memory(void *addr, char type) {
         arrayIndex++;
     }
 
-    cache_array[cache_index][entry_index].valid  = 1; 
-    cache_array[cache_index][entry_index].tag  = tag;
-    cache_array[cache_index][entry_index].timestamp = global_timestamp++; 
+    cache_array[cache_index][entry_index].valid  = 1;           //cache_array의 valid 값을 1로 바꾼다
+    cache_array[cache_index][entry_index].tag  = tag;           //cache_array의 tag값을 데이터의 tag값으로 바꾼다 
+    cache_array[cache_index][entry_index].timestamp = global_timestamp++;   //cache_array의 timestamp를 global_timestamp로 바꾸고 global_timestamp를 1 증가한다
    
     cache_entry_t *cache= &cache_array[cache_index][entry_index];
 
     /* Return the accessed data with a suitable type (b, h, or w) */
     if(type=='b'){
-        num_bytes+=1;
+        num_bytes+=1;                       //byte 타입이므로 액세스한 바이트를 1 증가시킨다
         return cache->data[byte_offset]; 
     }
     else if(type == 'h'){
-        num_bytes+=2;
+        num_bytes+=2;                      //halfword 타입이므로 액세스한 바이트를 2 증가시킨다
         return (unsigned char)cache ->data[byte_offset]
                 | (cache ->data[byte_offset +1]) <<8; 
     }
-    else if(type == 'w'){
-        num_bytes+=4;
+    else if(type == 'w'){   
+        num_bytes+=4;                      //word 타입이므로 액세스한 바이트를 4 증가시킨다 
         return (unsigned char)cache ->data[byte_offset]
                 |((unsigned char)cache ->data[byte_offset+1]) << 8
                 |((unsigned char)cache ->data[byte_offset+2]) << 16
