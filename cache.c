@@ -87,7 +87,7 @@ int check_cache_data_hit(void *addr, char type) {
     int tag= blockAddr / CACHE_SET_SIZE;                                // tag = block address / cache set size (the index of cache set matched with the block addr)
     int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE;   // byte offset = byte address % cache block size 
 
-    num_access_cycles++;                                                // increment the number of access cycles by one
+    num_access_cycles+=CACHE_ACCESS_CYCLE;                              // increment the number of access cycles by one
     
     // debugging code to check if every above cache information is correct
     printf("CACHE >> block_addr = %d, byte_offset = %d, cache_index = %d, tag = %d\n",      
@@ -100,7 +100,7 @@ int check_cache_data_hit(void *addr, char type) {
         if(cache->valid == 1 && cache->tag == tag){                     // if HIT: if valid is '1' and the stored tag is same to one of the target data
             printf("=> Hit!\n");                                        // debuggin code to check HIT  
                                                                     
-            cache->timestamp = global_timestamp++;                      // update timestamp of the cache block and increment global timestamp by one
+            cache->timestamp = ++global_timestamp;                      // update timestamp of the cache block and increment global timestamp by one
             num_cache_hits ++;                                          // increment the number of cache hit by one    
             cache->tag =  tag;                                          // set the tag of cache block to one of hit data
 
@@ -164,19 +164,16 @@ int access_memory(void *addr, char type) {                              // take 
     int blockAddr = (*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE;     // block address = byte address / cache block size
     int cache_index = blockAddr % CACHE_SET_SIZE;                       // cache index = block address % cache set size (the index of cache entry matched with the block addr) 
     int tag = blockAddr / CACHE_SET_SIZE;                               // tag = block address / cache set size (the index of cache set matched with the block addr)
-    int word_index = (*(int *)addr) / WORD_SIZE_BYTE;                   // word index = byte address / num of word byte (the index of cache set matched with the block addr)
-    int byte_offset = (*(int *)addr) % WORD_SIZE_BYTE;                  // byte offset = byte address % num of word byte (the access start address in each memory entry)
+    int word_index = ((*(int *)addr) / DEFAULT_CACHE_BLOCK_SIZE_BYTE)*2;               // word index = (byte address / num of cache block size)*2 (the index of cache set matched with the block addr)
+    int byte_offset = (*(int *)addr) % DEFAULT_CACHE_BLOCK_SIZE_BYTE;                  // byte offset = byte address % num of word byte (the access start address in each memory entry)
     
     // get the entry index by invoking find_entry_index_in_set() for copying to the cache
     int entry_index = find_entry_index_in_set(cache_index);
 
     printf("MEMORY >> word index = %d\n", entry_index);
    
-    /* add this main memory access cycle to global access cycle */
-    num_access_cycles+=100;
+    num_access_cycles+=MEMORY_ACCESS_CYCLE;
 
-    /* Fetch the data from the main memory and copy them to the cache */
-    /* void *addr: addr is byte address, whereas your main memory address is word address due to 'int memory_array[]' */
     int i=0;
     int arrayIndex = word_index;                                        // initialize "arrayIndex" value to "word_index" to store two entries in the memory
     while(i<DEFAULT_CACHE_BLOCK_SIZE_BYTE){                             // loop block_size times to store data as each byte
@@ -190,7 +187,7 @@ int access_memory(void *addr, char type) {                              // take 
 
     cache_array[cache_index][entry_index].valid  = 1;                       // set the valid of cache_array to '1'
     cache_array[cache_index][entry_index].tag  = tag;                       // update the tag of the cache_array to one of the given address
-    cache_array[cache_index][entry_index].timestamp = global_timestamp++;   // update timestamp of the cache block and increment global timestamp by one
+    cache_array[cache_index][entry_index].timestamp = ++global_timestamp;   // update timestamp of the cache block and increment global timestamp by one
    
     cache_entry_t *cache= &cache_array[cache_index][entry_index];       // declare cache_entry_t pointer as cache
 

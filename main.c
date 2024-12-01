@@ -13,7 +13,6 @@
 #include <string.h> 
 #include <stdlib.h>
 #include "cache_impl.h"
-//#include "cache.c"
 
 int num_cache_hits = 0;
 int num_cache_misses = 0;
@@ -59,7 +58,7 @@ int main(void) {
         printf("Can't open input file\n");
         return -1;
     }
-    ofp = fopen("access_output.txt", "w");
+    ofp = fopen("Output2_fully_assoc", "w");
     if (ofp == NULL) {
         printf("Can't open output file\n");
         fclose(ifp);
@@ -98,7 +97,8 @@ int main(void) {
         access_type = array[i][100];                    // load access type from "array[i][100]"
         accessed_data = retrieve_data(&access_addr, access_type);   // store retrieved data from cache or memory into accessed data variable
         print_cache_entries();                          // debugging code to check if the correct data is stored into cache
-        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%d\t%c\t%#x\n",access_addr,access_type,accessed_data);    // store access information into "s" array
+        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%d\t%c\t%#x\n",
+                                access_addr,access_type,accessed_data);    // store access information into "s" array
     }
 
     // print every input information and accessed data into the output file
@@ -118,6 +118,6 @@ int main(void) {
 
     fclose(ifp); 
     fclose(ofp);
-    
+
     return 0;
 }
