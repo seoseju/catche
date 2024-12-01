@@ -57,12 +57,12 @@ int main(void) {
     init_memory_content();
     init_cache_content();
     
-    ifp = fopen("access_input2.txt", "r"); //ifp = 인풋파일을 '읽기모드'로 열었음 
+    ifp = fopen("access_input2.txt", "r");
     if (ifp == NULL) {
         printf("Can't open input file\n");
         return -1;
     }
-    ofp = fopen("access_output.txt", "w"); //ofp = 아웃풋파일을 쓰기 모드로 열었음 
+    ofp = fopen("access_output.txt", "w");
     if (ofp == NULL) {
         printf("Can't open output file\n");
         fclose(ifp);
@@ -71,59 +71,56 @@ int main(void) {
     
     /* Fill out here by invoking retrieve_data() */
 
-    // 인풋파일 뜯어서 array 이차원 배열에 저장 
-    // array[0][1] : 첫번째 줄의 두번째 단어 == b
+    char line[101];                                                     // array to store one line from input file
+    char *array[100];                                                   // array to store tokens from input lines
+    int lineCount=0;                                                    // the number of lines
 
-    char line[101]; //인풋파일 줄 나눠 넣을 배열
-    char *array[100]; //쪼개진 단어 넣을 배열
-    int lineCount=0; //줄 수 세기
-
-    while(fgets(line, sizeof(line), ifp)!=NULL && lineCount < 100){
-        array[lineCount] = malloc(sizeof(char)*101);
-        char *token = strtok(line, " \n");
-        int tokenIndex = 0;
-        while(token!=NULL&&tokenIndex<2){
-            if(tokenIndex==0)
-                strncpy(array[lineCount], token, 101);
-            else if(tokenIndex==1)
-                array[lineCount][100] = token[0];
-            token=strtok(NULL, " \n");
-            tokenIndex++;
+    while(fgets(line, sizeof(line), ifp)!=NULL && lineCount < 100){     // loop while line string from input file is not NULL and line count is under MAX_LINE_COUNT
+        array[lineCount] = malloc(sizeof(char)*101);                    // dynamic memory allocation to "array"
+        char *token = strtok(line, " \n");                              // tokenize one input line by " " and "\n"
+        int tokenIndex = 0;                                             // initialize tokenIndex to differentiate address and type string
+        while(token!=NULL&&tokenIndex<2){                               // loop while token is not NULL and tokenIndex is under 2
+            if(tokenIndex==0)                                           // case that the token means byte address
+                strncpy(array[lineCount], token, 101);                  // store address to "array"
+            else if(tokenIndex==1)                                      // case that the token means type
+                array[lineCount][100] = token[0];                       // store type character to the last entry of "array"
+            token=strtok(NULL, " \n");                                  // empty the token list
+            tokenIndex++;                                               // increment tokenIndex by one
         }
-        lineCount++;
+        lineCount++;                                                    // increment lineCount by one to read the next line
     }
 
-    // array[i][0]으로 access_addr 정하고
-    // array[i][1]로 type읽어서 access_type 정하기
-    //인풋파일에서 읽어온 byte address와 type, retrieve_data()에서 반환받은 accessed_data를 출력한다
-    char s[1000] = "";
-    fprintf(ofp,"[Accessed Data]\n");                   //아웃풋파일에 "[Accessed Data]" 출력
+    // Now, array[i] is pointer of the target address string
+    // array[i][1] value is the type character
+    // to retreive data from the cache and memory and print the data into "output file"
+    char s[1000] = "";                                  // char type list to store character to be printed into the output file
+    fprintf(ofp,"[Accessed Data]\n");                   // print "[Accessed Data]\n" into output file
 
-    for(int i=0;i<lineCount;i++){                       //줄 수 만큼 반복문을 돈다
-        access_addr = strtoul(array[i], NULL, 10);      
-        access_type = array[i][100];
-        accessed_data = retrieve_data(&access_addr, access_type);   //retrieve_data()의 반환값을 accessed_data에 저장한다
-        print_cache_entries();
-        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%d\t%c\t%#x\n",access_addr,access_type,accessed_data);
+    for(int i=0;i<lineCount;i++){                       // loop NUM_LINES times to retrieve i-th data
+        access_addr = strtoul(array[i], NULL, 10);      // load access address from "array[i]"
+        access_type = array[i][100];                    // load access type from "array[i][100]"
+        accessed_data = retrieve_data(&access_addr, access_type);   // store retrieved data from cache or memory into accessed data variable
+        print_cache_entries();                          // debugging code to check if the correct data is stored into cache
+        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%d\t%c\t%#x\n",access_addr,access_type,accessed_data);    // store access information into "s" array
     }
 
-    // output파일 출력
-    fprintf(ofp,"%s",s);                                //ofp에 s 출력
-    fprintf(ofp,"----------------------------\n") ;     //oft에 "----------------------------"출력
+    // print every input information and accessed data into the output file
+    fprintf(ofp,"%s",s);
+    fprintf(ofp,"----------------------------\n") ;
 
- 
-    if(DEFAULT_CACHE_ASSOC  == 1)                                       //DEFAULT_CACHE_ASSOC = 1 (direct mapped cache)
-        fprintf(ofp,"[Direct mapped Cache performance]\n");             //"[Direct mapped Cache performance]" 출력
-    else if(DEFAULT_CACHE_ASSOC  == 2)                                  //DEFAULT_CACHE_ASSOC = 2 (2-way set associative cache)
-        fprintf(ofp,"[2-way set associative Cache performance]\n");     //"[2-way set associative Cache performance]" 출력
-    else if(DEFAULT_CACHE_ASSOC  == 4)                                  //DEFAULT_CACHE_ASSOC = 4 (fully associative cache)
-        fprintf(ofp,"[Fully associative Cache performance]\n");         //"[Fully associative Cache performance]" 출력
+    // print information about cache access performance
+    if(DEFAULT_CACHE_ASSOC  == 1)                                       // DEFAULT_CACHE_ASSOC = 1 (direct mapped cache)
+        fprintf(ofp,"[Direct mapped Cache performance]\n");             // print "[Direct mapped Cache performance]"
+    else if(DEFAULT_CACHE_ASSOC  == 2)                                  // DEFAULT_CACHE_ASSOC = 2 (2-way set associative cache)
+        fprintf(ofp,"[2-way set associative Cache performance]\n");     // print "[2-way set associative Cache performance]"
+    else if(DEFAULT_CACHE_ASSOC  == 4)                                  // DEFAULT_CACHE_ASSOC = 4 (fully associative cache)
+        fprintf(ofp,"[Fully associative Cache performance]\n");         // print "[Fully associative Cache performance]"
 
-    fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n", (float)num_cache_hits/global_timestamp, num_cache_hits,global_timestamp);   //hit ratio 출력 코드 (캐시 히트 횟수)/(캐시 접근 횟수)로 구한다 
-    fprintf(ofp,"Bandwidth = %.2f  (%d/%d)\n", (float)num_bytes/num_access_cycles, num_bytes,num_access_cycles);           //bandwidth 출력 코드 (접근한 바이트 수)/(액세스 사이클 횟수)로 구한다
+    fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n", (float)num_cache_hits/global_timestamp, num_cache_hits,global_timestamp);   // print hit ratio (the number of cache hit cases)/(the number of cache access)
+    fprintf(ofp,"Bandwidth = %.2f  (%d/%d)\n", (float)num_bytes/num_access_cycles, num_bytes,num_access_cycles);           // print bandwidth (the number of accessed bytes)/(the access cycles)
 
-    fclose(ifp);        //인풋파일 닫기 
-    fclose(ofp);        //아웃풋파일 닫기 
+    fclose(ifp); 
+    fclose(ofp);
     
     return 0;
 }
