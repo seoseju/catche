@@ -24,27 +24,24 @@ int num_access_cycles = 0;
 int global_timestamp = 0;
 
 int retrieve_data(void *addr, char data_type) {
-    int value_returned = -1; /* accessed data */                        //반환받은 접근한 데이터를 저장할 value_returned 변수 초기화 
+    int value_returned = -1; /* accessed data */                        // initialize "value_returned" to -1 to store accessed data 
 
     /*check data by invoking check_cache_data_hit()*/
-    printf("===== addr %d type %c ======\n", *(int *)addr, data_type);  //메인에서 받은 데이터 주소와 타입 확인용 코드 
-    value_returned = check_cache_data_hit(addr, data_type);             //hit 검사를 위해 check_cache_data_hit() 호출하고 반환값을 value_returned에 저장한다
+    printf("===== addr %d type %c ======\n", *(int *)addr, data_type);  // debugging code to check if addr and type parameters are correct 
+    value_returned = check_cache_data_hit(addr, data_type);             // check cache data hit: if HIT, returned value will have accessed data
+                                                                        //                       if MISS, returned value will have '-1'
 
     /* In case of the cache miss event, retrieve data from the main memory  by invoking access_memory()*/
+    if(value_returned == -1){                                           // MISS case  
+        value_returned = access_memory(addr, data_type);                // invoke access_memory() to read the target data from main memory 
 
-    if(value_returned == -1){                                           //miss로 인해 -1을 반환받은 경우  
-        value_returned = access_memory(addr, data_type);                //메인 메모리에서 데이터 읽어오기 위해 access_memory()호출 
-
-        /* If there is no data neither in cache nor memory, return -1, 
-        else return data */
-
-        if(value_returned == -1) return -1;                             //메모리에도 데이터가 없는 경우 -1을 반환한다
+        if(value_returned == -1) return -1;                             // If there is no data neither in cache nor memory, return -1, else return data
         
-        /* access_memory 성공 !! */
-        else return value_returned;                                     //메모리 접근 성공 시 메모리에서 찾은 데이터를 반환한다
+        /* access_memory() success!! */
+        else return value_returned;                                     // if memory access succeeds, return data from memory
     }
-    /* hit 성공 !! */
-    else return value_returned;                                         //hit 시 캐시 데이터를 반환한다
+    /* hit!! */
+    else return value_returned;                                         // HIT case: return data accessed from cache
   
 }
 
