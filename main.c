@@ -13,6 +13,8 @@
 #include <string.h> 
 #include <stdlib.h>
 #include "cache_impl.h"
+/*If “linker command failed with exit code 1” error occured, please remove the annotation below*/
+//#include "cache.c" 
 
 int num_cache_hits = 0;
 int num_cache_misses = 0;
@@ -58,7 +60,7 @@ int main(void) {
         printf("Can't open input file\n");
         return -1;
     }
-    ofp = fopen("Output2_fully_assoc", "w");
+    ofp = fopen("Output2_directed_mapped", "w");
     if (ofp == NULL) {
         printf("Can't open output file\n");
         fclose(ifp);
@@ -97,7 +99,7 @@ int main(void) {
         access_type = array[i][100];                    // load access type from "array[i][100]"
         accessed_data = retrieve_data(&access_addr, access_type);   // store retrieved data from cache or memory into accessed data variable
         print_cache_entries();                          // debugging code to check if the correct data is stored into cache
-        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%d\t%c\t%#x\n",
+        snprintf(s+strlen(s), sizeof(s) - strlen(s), "%lu\t%c\t%#x\n",
                                 access_addr,access_type,accessed_data);    // store access information into "s" array
     }
 
@@ -113,8 +115,10 @@ int main(void) {
     else if(DEFAULT_CACHE_ASSOC  == 4)                                  // DEFAULT_CACHE_ASSOC = 4 (fully associative cache)
         fprintf(ofp,"[Fully associative Cache performance]\n");         // print "[Fully associative Cache performance]"
 
-    fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n", (float)num_cache_hits/global_timestamp, num_cache_hits,global_timestamp);   // print hit ratio (the number of cache hit cases)/(the number of cache access)
-    fprintf(ofp,"Bandwidth = %.2f  (%d/%d)\n", (float)num_bytes/num_access_cycles, num_bytes,num_access_cycles);           // print bandwidth (the number of accessed bytes)/(the access cycles)
+    float hit_ratio = (float)num_cache_hits/global_timestamp ;          //hit ratio = # of cache hit cases / # of cache access
+    float bandwidth = (float)num_bytes/num_access_cycles;               //bandwidth = # of accessed bytes / # of access cycles
+    fprintf(ofp,"Hit ratio = %.2f  (%d/%d)\n",hit_ratio, num_cache_hits,global_timestamp);       // print hit ratio 
+    fprintf(ofp,"Bandwidth = %.2f  (%d/%d)\n",bandwidth, num_bytes,num_access_cycles);           // print bandwidth 
 
     fclose(ifp); 
     fclose(ofp);
